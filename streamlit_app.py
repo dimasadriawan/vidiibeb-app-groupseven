@@ -1,7 +1,6 @@
 import streamlit as st
 from PIL import Image
 from io import BytesIO
-from rembg import remove
 import base64
 
 def convert_image(img, format):
@@ -16,7 +15,7 @@ def download_button(data, filename, label):
     st.markdown(href, unsafe_allow_html=True)
 
 def main():
-    st.title("Rotate and Remove Background of Image")
+    st.title("Rotate Image")
 
     uploaded_file = st.file_uploader("Upload your image", type=["jpg", "jpeg", "png"])
 
@@ -32,31 +31,23 @@ def main():
         
         st.image(rotated_image, caption="Rotated Image", use_column_width=True)
 
-        # Remove background
-        if st.button("Remove Background"):
-            input_bytes = BytesIO()
-            rotated_image.save(input_bytes, format="PNG")
-            output_bytes = remove(input_bytes.getvalue())
-            no_bg_image = Image.open(BytesIO(output_bytes))
-            st.image(no_bg_image, caption="Image Without Background", use_column_width=True)
+        # Format selection for download
+        st.write("### Download Processed Image")
+        file_format = st.selectbox("Select format:", ["PNG", "JPG", "PDF"])
 
-            # Format selection for download
-            st.write("### Download Processed Image")
-            file_format = st.selectbox("Select format:", ["PNG", "JPG", "PDF"])
+        if st.button("Download Image"):
+            # Convert image to selected format
+            if file_format == "JPG":
+                image_data = convert_image(rotated_image.convert("RGB"), format="JPEG")
+                filename = "processed_image.jpg"
+            elif file_format == "PNG":
+                image_data = convert_image(rotated_image, format="PNG")
+                filename = "processed_image.png"
+            elif file_format == "PDF":
+                image_data = convert_image(rotated_image.convert("RGB"), format="PDF")
+                filename = "processed_image.pdf"
 
-            if st.button("Download Image"):
-                # Convert image to selected format
-                if file_format == "JPG":
-                    image_data = convert_image(no_bg_image.convert("RGB"), format="JPEG")
-                    filename = "processed_image.jpg"
-                elif file_format == "PNG":
-                    image_data = convert_image(no_bg_image, format="PNG")
-                    filename = "processed_image.png"
-                elif file_format == "PDF":
-                    image_data = convert_image(no_bg_image.convert("RGB"), format="PDF")
-                    filename = "processed_image.pdf"
-
-                download_button(image_data, filename, f"Download {file_format} File")
+            download_button(image_data, filename, f"Download {file_format} File")
 
 if __name__ == "__main__":
     main()
